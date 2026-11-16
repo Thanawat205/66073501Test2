@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartLiving Property | ระบบจัดการสัญญาเช่าและเงินประกัน</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+  <style>
+    :root{--green:#087653;--green-dark:#064e3b;--mint:#eaf5ef;--ink:#182b23;--muted:#718078;--line:#e4ebe6;--surface:#fff;--bg:#f5f7f6;--red:#b42335;--shadow:0 8px 26px rgba(22,52,37,.055)}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:28px}
+    body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 Inter,"Noto Sans Thai",Tahoma,Arial,sans-serif}
+    button,input,textarea{font:inherit}
+    .app-shell{min-height:100vh;display:grid;grid-template-columns:252px minmax(0,1fr)}
+    .sidebar{position:sticky;top:0;height:100vh;background:#fff;border-right:1px solid var(--line);padding:26px 17px;display:flex;flex-direction:column;gap:28px}
+    .brand{display:flex;align-items:center;gap:11px;padding:0 9px}
+    .brand-mark{width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#0b805b,#064e3b);display:grid;place-items:center;color:#fff;font-weight:900;font-size:20px;box-shadow:0 6px 14px #08765330}
+    .brand strong{display:block;font-size:16px;letter-spacing:-.3px;color:#143c2d;line-height:1.25}
+    .brand small{font-size:10px;color:#87948c;letter-spacing:1.1px;font-weight:700}
+    .nav-label{font-size:10px;letter-spacing:1.4px;color:#9aa69e;font-weight:800;padding:0 12px;margin-bottom:7px}
+    .nav-list{display:grid;gap:5px}
+    .nav-list a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:#617168;text-decoration:none;font-weight:600;transition:.18s}
+    .nav-list a:hover,.nav-list a.active{background:#eaf5ef;color:#087653}
+    .nav-icon{width:22px;text-align:center;font-size:16px}
+    .sidebar-note{margin-top:auto;padding:15px;border-radius:13px;background:#f1f7f3;border:1px solid #e4eee7;color:#52665a;font-size:12px}
+    .sidebar-note strong{display:block;color:#1b543b;margin-bottom:4px}
+    .workspace{min-width:0;padding:0 34px 54px}
+    .topbar{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);margin-bottom:28px;gap:16px}
+    .breadcrumb{font-size:13px;color:var(--muted)}
+    .breadcrumb strong{color:#243a2e}
+    .top-actions{display:flex;align-items:center;gap:12px;min-width:0}
+    .network-pill{border:1px solid #dce9e0;background:#f0f7f2;color:#24704e;border-radius:30px;padding:7px 11px;font-size:11px;font-weight:700;white-space:nowrap}
+    .network-pill:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#26a269;margin-right:7px}
+    #connect{margin:0;background:var(--green-dark);color:#fff;padding:10px 15px;border-radius:9px;box-shadow:none;white-space:nowrap}
+    .page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:0 0 23px}
+    .eyebrow{font-size:10px;letter-spacing:1.6px;font-weight:800;color:#14815c;margin:0 0 5px}
+    .page-heading h1{font-size:27px;line-height:1.3;letter-spacing:-.6px;margin:0;color:#173c2d}
+    .page-heading p{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .wallet-panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:190px;max-width:330px}
+    #wallet,#balance,#walletMessage{margin:0;overflow-wrap:anywhere}
+    #wallet{font-size:12px;color:#40594b}
+    #balance{font-size:12px;color:#087653;font-weight:700;margin-top:3px}
+    #withdraw{margin:7px 0 0;padding:6px 10px;font-size:11px;background:#e7f4eb;color:#075b3d;box-shadow:none}
+    #walletMessage{font-size:11px;margin-top:5px}
+    .intro-banner{background:linear-gradient(110deg,#0a4936,#087653);color:#fff;border-radius:16px;padding:22px 25px;margin-bottom:23px;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 10px 25px #064e3b18}
+    .intro-banner h2{color:#fff;margin:0 0 4px;font-size:18px}
+    .intro-banner p{color:#d6eee1;margin:0;font-size:12px}
+    .banner-tag{border:1px solid #ffffff55;background:#ffffff12;padding:7px 11px;border-radius:8px;font-size:11px;white-space:nowrap}
+    .section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+    section{min-width:0;background:var(--surface);padding:23px 24px;border:1px solid var(--line);border-radius:14px;margin:0 0 20px;box-shadow:var(--shadow);scroll-margin-top:20px}
+    section.wide{grid-column:1/-1}
+    h2{font-size:17px;line-height:1.4;margin:0 0 6px;color:#173c2d;display:flex;align-items:center;gap:9px}
+    h2:before{content:"";width:4px;height:20px;border-radius:8px;background:#0b9366;display:inline-block;flex:0 0 auto}
+    .section-subtitle{font-size:12px;color:var(--muted);margin:0 0 17px 13px}
+    h3{margin:0 0 10px;color:#164b36;font-size:15px}
+    label{display:block;font-weight:700;font-size:12px;color:#40584b;margin:12px 0 5px}
+    input,textarea{display:block;width:100%;min-width:0;padding:10px 12px;border:1px solid #d7e2db;border-radius:8px;background:#fbfdfc;color:var(--ink);outline:none;transition:border-color .18s,box-shadow .18s}
+    input:focus,textarea:focus{border-color:#15966a;box-shadow:0 0 0 3px #15966a1c;background:#fff}
+    input::placeholder,textarea::placeholder{color:#a0ada5}
+    textarea{min-height:88px;resize:vertical}
+    button{padding:10px 15px;margin:14px 7px 0 0;border:0;border-radius:8px;background:var(--green);color:#fff;font-weight:700;cursor:pointer;transition:transform .15s,filter .15s,box-shadow .15s;box-shadow:0 4px 10px #08765318}
+    button:hover{filter:brightness(1.05);transform:translateY(-1px)}
+    button:active{transform:translateY(0)}
+    button.secondary{background:#edf3ef;color:#315344;box-shadow:none}
+    button.danger{background:#fff0f1;color:var(--red);box-shadow:none;border:1px solid #f2d5d9}
+    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    .muted{color:var(--muted);font-size:12px}
+    .error{color:var(--red);background:#fff3f4;border:1px solid #f4dadd;padding:9px 12px;border-radius:8px}
+    .success{color:#087653;background:#edf8f1;border:1px solid #d5eddf;padding:9px 12px;border-radius:8px}
+    .record{padding:18px;margin:14px 0;border:1px solid var(--line);border-radius:12px;background:#fcfefd}
+    .record p{margin:7px 0;white-space:pre-wrap;color:#45584d;overflow-wrap:anywhere}
+    .action-form{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+    #agreementResult:empty{display:none}
+    #agreementMessage,#propertyMessage,#createMessage{margin:10px 0 0}
+    #searchAgreement{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}
+    #searchAgreement label{margin:0;min-width:0}
+    #searchAgreement button{margin:0;white-space:nowrap}
+    #propertyForm,#createForm{max-width:none}
+    #propertyForm button,#createForm button{margin-top:17px}
+    #createForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:15px}
+    #createForm label,#createForm p,#createForm button{grid-column:1/-1}
+    #createForm input{margin-bottom:1px}
+    ol{padding-left:22px}
+    li{padding:4px 0;overflow-wrap:anywhere}
+    /* Application-style tabs and dashboard refinements */
+    .workspace{max-width:1600px;margin:0 auto;width:100%;padding-left:clamp(18px,3vw,44px);padding-right:clamp(18px,3vw,44px)}
+    .sidebar{z-index:5;box-shadow:5px 0 24px rgba(24,55,38,.025)}
+    .nav-list a{position:relative;min-height:44px}
+    .nav-list a.active:before{content:"";position:absolute;left:-17px;top:9px;bottom:9px;width:3px;border-radius:0 4px 4px 0;background:#087653}
+    .nav-list a:focus-visible,button:focus-visible{outline:3px solid #7bc9a4;outline-offset:2px}
+    .topbar{position:sticky;top:0;z-index:4;background:rgba(245,247,246,.92);backdrop-filter:blur(12px)}
+    .page-heading{padding-top:2px}
+    .intro-banner{min-height:150px;position:relative;overflow:hidden}
+    .intro-banner:after{content:"";position:absolute;width:230px;height:230px;border:1px solid #ffffff24;border-radius:50%;right:9%;top:-115px;box-shadow:0 0 0 28px #ffffff0b,0 0 0 58px #ffffff08}
+    .intro-banner>div,.intro-banner .banner-tag{position:relative;z-index:1}
+    .tab-panel{display:none;animation:panelIn .22s ease-out}
+    .tab-panel.active{display:block}
+    @keyframes panelIn{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    .dashboard-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 20px}
+    .dashboard-tile{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px 19px;box-shadow:var(--shadow);min-height:126px}
+    .tile-icon{width:36px;height:36px;border-radius:10px;background:#eaf5ef;color:#087653;display:grid;place-items:center;font-size:17px;margin-bottom:12px}
+    .dashboard-tile strong{display:block;font-size:14px;color:#1c4934;margin-bottom:3px}
+    .dashboard-tile span{display:block;font-size:12px;color:var(--muted)}
+    .quick-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+    .quick-actions button{margin:0}
+    .tab-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:0 0 16px}
+    .tab-heading h2{font-size:21px;margin:0}
+    .tab-heading p{font-size:12px;color:var(--muted);margin:4px 0 0}
+    .section-grid{display:block}
+    section{margin-bottom:0}
+    .tab-panel>section{margin-bottom:18px}
+    #search{max-width:100%}
+    #properties,#agreements{max-width:100%}
+    #propertyForm{max-width:760px}
+    #createForm{max-width:900px}
+    .empty-hint{padding:18px;border:1px dashed #cfddd3;border-radius:10px;background:#fbfdfb;color:#708078;font-size:12px}
+    @media(max-width:780px){.workspace{padding-left:16px;padding-right:16px}.nav-list a.active:before{display:none}.topbar{position:relative}.dashboard-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:520px){.dashboard-grid{grid-template-columns:1fr}.tab-heading{align-items:flex-start;flex-direction:column}.workspace{padding-left:12px;padding-right:12px}}
+    @media(max-width:1050px){.app-shell{grid-template-columns:215px minmax(0,1fr)}.workspace{padding:0 22px 40px}.section-grid{gap:14px}section{padding:20px}}
+    @media(max-width:780px){.app-shell{display:block}.sidebar{position:relative;height:auto;padding:14px 16px;border-right:0;border-bottom:1px solid var(--line);gap:12px}.brand{padding:0 3px}.sidebar nav{overflow:auto}.nav-label,.sidebar-note{display:none}.nav-list{display:flex;gap:5px;min-width:max-content}.nav-list a{padding:8px 10px;font-size:12px}.workspace{padding:0 16px 35px}.topbar{height:64px;margin-bottom:20px}.section-grid{grid-template-columns:1fr}.page-heading{align-items:flex-start;flex-direction:column}.wallet-panel{width:100%;max-width:none}.intro-banner{padding:18px;align-items:flex-start;flex-direction:column}.section-grid section.wide{grid-column:auto}}
+    @media(max-width:520px){.workspace{padding:0 12px 28px}.topbar{align-items:center}.network-pill{display:none}.page-heading h1{font-size:23px}section{padding:18px 15px;margin-bottom:14px}#searchAgreement{grid-template-columns:1fr}#searchAgreement button{width:100%}#createForm{grid-template-columns:1fr}#createForm label,#createForm p,#createForm button{grid-column:auto}button{max-width:100%}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div><strong>SmartLiving</strong><small>PROPERTY MANAGER</small></div>
+    </div>
+    <nav aria-label="เมนูหลัก">
+      <div class="nav-label">WORKSPACE</div>
+      <div class="nav-list">
+        <a class="active" href="#overview" data-tab="overview" aria-current="page"><span class="nav-icon">⌂</span> ภาพรวม</a>
+        <a href="#search" data-tab="search"><span class="nav-icon">⌕</span> ค้นหาสัญญา</a>
+        <a href="#properties" data-tab="properties"><span class="nav-icon">▦</span> ทรัพย์สิน</a>
+        <a href="#agreements" data-tab="agreements"><span class="nav-icon">▤</span> สร้างสัญญา</a>
+      </div>
+    </nav>
+    <div class="sidebar-note"><strong>Blockchain secured</strong>ข้อมูลสัญญาและการชำระเงินบันทึกบน Sepolia Testnet เพื่อการทดลองใช้งาน</div>
+  </aside>
+
+  <main class="workspace">
+    <div class="topbar">
+      <div class="breadcrumb">Workspace <span style="color:#aab4ad">/</span> <strong>ภาพรวม</strong></div>
+      <div class="top-actions"><span class="network-pill">Sepolia Testnet</span><button id="connect" type="button">Connect MetaMask</button></div>
+    </div>
+
+    <div class="page-heading" id="overview">
+      <div><p class="eyebrow">PROPERTY MANAGEMENT</p><h1>จัดการอสังหาริมทรัพย์</h1><p>จัดการทรัพย์สิน สัญญาเช่า และเงินประกันได้ในพื้นที่เดียว</p></div>
+      <div class="wallet-panel">
+        <p id="wallet" role="status">ยังไม่ได้เชื่อม Wallet</p>
+        <p id="balance" hidden></p>
+        <button id="withdraw" type="button" hidden>ถอนยอดที่ได้รับอนุมัติ</button>
+        <p id="walletMessage" role="status"></p>
+      </div>
+    </div>
+
+    <div class="tab-panel active" data-tab-panel="overview" id="panel-overview" role="region" aria-label="ภาพรวม">
+      <div class="intro-banner">
+        <div><h2>ยินดีต้อนรับสู่ SmartLiving Property</h2><p>จัดการทรัพย์สิน สัญญาเช่า และเงินประกันได้ในพื้นที่เดียว พร้อมบันทึกธุรกรรมบน Blockchain</p></div>
+        <span class="banner-tag">● Sepolia Testnet</span>
+      </div>
+      <div class="dashboard-grid">
+        <div class="dashboard-tile"><div class="tile-icon">▦</div><strong>จัดการทรัพย์สิน</strong><span>ลงทะเบียนห้องพักหรืออสังหาริมทรัพย์เพื่อเริ่มต้นปล่อยเช่า</span><div class="quick-actions"><button type="button" data-go-tab="properties">ไปยังทรัพย์สิน</button></div></div>
+        <div class="dashboard-tile"><div class="tile-icon">▤</div><strong>สร้างสัญญาเช่า</strong><span>กำหนดผู้เช่า ระยะเวลา ค่าเช่า และเงื่อนไขสัญญา</span><div class="quick-actions"><button type="button" data-go-tab="agreements">สร้างสัญญา</button></div></div>
+        <div class="dashboard-tile"><div class="tile-icon">⌕</div><strong>ตรวจสอบสัญญา</strong><span>ค้นหารายละเอียดและประวัติการชำระเงินด้วย Agreement ID</span><div class="quick-actions"><button type="button" data-go-tab="search">ค้นหาสัญญา</button></div></div>
+      </div>
+      <section>
+        <h2>เริ่มต้นใช้งาน</h2><p class="section-subtitle">ขั้นตอนหลักในการใช้งานระบบจัดการสัญญาเช่า</p>
+        <div class="empty-hint">1. เชื่อมต่อ MetaMask บน Sepolia Testnet<br>2. ลงทะเบียนทรัพย์สินและกำหนดค่าเช่ากับเงินประกัน<br>3. สร้างสัญญาโดยระบุ Wallet ผู้เช่าและผู้ตัดสินข้อพิพาท<br>4. ค้นหาสัญญาเพื่อยืนยันเงื่อนไข ฝากเงินประกัน และติดตามการชำระเงิน</div>
+      </section>
+    </div>
+
+    <div class="tab-panel" data-tab-panel="search" id="panel-search" role="region" aria-label="ค้นหาสัญญา" aria-hidden="true">
+      <div class="tab-heading"><div><h2>ค้นหาสัญญาเช่า</h2><p>ตรวจสอบรายละเอียดสัญญา สถานะ และประวัติการชำระเงิน</p></div></div>
+      <section id="search">
+        <h2>ค้นหาสัญญาเช่า</h2><p class="section-subtitle">ค้นหาด้วย Agreement ID เพื่อดูรายละเอียดสัญญาและประวัติการชำระเงิน</p>
+        <form id="searchAgreement">
+          <label for="agreementId">หมายเลขสัญญา (Agreement ID)<input id="agreementId" inputmode="numeric" placeholder="ระบุหมายเลขสัญญา เช่น 1" required></label>
+          <button class="secondary">ค้นหาสัญญา</button>
+        </form>
+        <p id="agreementMessage" role="status"></p>
+        <div id="agreementResult" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <div class="tab-panel" data-tab-panel="properties" id="panel-properties" role="region" aria-label="ทรัพย์สิน" aria-hidden="true">
+      <div class="tab-heading"><div><h2>ทรัพย์สินของฉัน</h2><p>ลงทะเบียนทรัพย์สินและเตรียมข้อมูลสำหรับสร้างสัญญาเช่า</p></div></div>
+      <section id="properties">
+        <h2>ลงทะเบียนทรัพย์สิน</h2><p class="section-subtitle">เพิ่มห้องพักหรืออสังหาริมทรัพย์ที่ต้องการปล่อยเช่า</p>
+        <form id="propertyForm">
+          <label for="name">ชื่อห้องหรือรหัสทรัพย์สิน</label><input id="name" placeholder="เช่น ห้อง A-101" required>
+          <label for="rent">ค่าเช่าต่องวด (ETH)</label><input id="rent" inputmode="decimal" placeholder="เช่น 0.01" required>
+          <label for="deposit">เงินประกัน (ETH)</label><input id="deposit" inputmode="decimal" placeholder="เช่น 0.02" required>
+          <button>+ ลงทะเบียนทรัพย์สิน</button>
+        </form>
+        <p id="propertyMessage" role="status"></p>
+      </section>
+    </div>
+
+    <div class="tab-panel" data-tab-panel="agreements" id="panel-agreements" role="region" aria-label="สร้างสัญญา" aria-hidden="true">
+      <div class="tab-heading"><div><h2>สร้างสัญญาเช่า</h2><p>กำหนดผู้เช่า ระยะเวลาสัญญา และเงื่อนไขการเช่า</p></div></div>
+      <section id="agreements">
+        <h2>สร้างสัญญาเช่า</h2><p class="section-subtitle">กำหนดผู้เช่า ระยะเวลาสัญญา และเงื่อนไขการเช่า</p>
+        <form id="createForm">
+          <label for="propertyId">Property ID ของคุณ</label><input id="propertyId" inputmode="numeric" placeholder="หมายเลขทรัพย์สิน" required>
+          <label for="tenant">Wallet ผู้เช่า</label><input id="tenant" placeholder="0x..." required>
+          <label for="arbitrator">Wallet ผู้ตัดสินข้อพิพาท</label><input id="arbitrator" placeholder="0x..." required>
+          <label for="startsAt">วันและเวลาเริ่มสัญญา</label><input id="startsAt" type="datetime-local" required>
+          <label for="endsAt">วันและเวลาสิ้นสุดสัญญา</label><input id="endsAt" type="datetime-local" required>
+          <p class="muted">ใช้เขตเวลาของเบราว์เซอร์ โปรดตรวจสอบวันและเวลาก่อนยืนยัน</p>
+          <label for="installments">จำนวนงวด</label><input id="installments" type="number" min="1" max="120" value="1" required>
+          <label for="terms">เงื่อนไขสัญญาและเงื่อนไขหักเงินประกัน</label><textarea id="terms" placeholder="ระบุวันชำระค่าเช่า เกณฑ์ตรวจห้อง และเกณฑ์หักเงินประกัน" required></textarea>
+          <p class="muted">ข้อมูลเงื่อนไขและบันทึกการตรวจห้องจะเผยแพร่บน Blockchain สาธารณะ ควรใช้ข้อมูลสำหรับสาธิต</p>
+          <button>สร้างสัญญาเช่า</button>
+        </form>
+        <p id="createMessage" role="status"></p>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+  const INFURA_URL = "https://sepolia.infura.io/v3/fbe6510ef5b24166b46007975d04a463";
+  const CONTRACT_ADDRESS = "0x1dbaf5580ffd54235daa3b348410c7e9f850abfc";
+  const CHAIN_ID = 11155111n;
+  const ABI = [
+    "event PropertyRegistered(uint256 indexed propertyId, address indexed landlord)",
+    "event AgreementCreated(uint256 indexed agreementId, uint256 indexed propertyId)",
+    "function registerProperty(string name, uint256 rent, uint256 deposit) returns (uint256)",
+    "function createAgreement(tuple(uint256 propertyId, address tenant, address arbitrator, uint64 startsAt, uint64 endsAt, uint16 installments, string terms) input) returns (uint256)",
+    "function confirmAgreement(uint256 id)",
+    "function cancelUnfunded(uint256 id)",
+    "function fundDeposit(uint256 id) payable",
+    "function payRent(uint256 id) payable",
+    "function recordInspection(uint256 id, uint256 proposedRefund, string inspection)",
+    "function approveRefund(uint256 id)",
+    "function openDispute(uint256 id, string reason)",
+    "function resolveDispute(uint256 id, uint256 refund, string decision)",
+    "function withdraw(address recipient)",
+    "function withdrawable(address) view returns (uint256)",
+    "function getProperty(uint256 id) view returns (tuple(address landlord, string name, uint256 rent, uint256 securityDeposit))",
+    "function getAgreement(uint256 id) view returns (tuple(uint256 propertyId, address landlord, address tenant, address arbitrator, uint64 startsAt, uint64 endsAt, uint16 installments, string terms, uint256 rent, uint256 securityDeposit, uint256 depositHeld, bool landlordConfirmed, bool tenantConfirmed, uint8 status))",
+    "function getSettlement(uint256 id) view returns (tuple(uint256 proposedRefund, string inspection, string disputeReason, address disputedBy, uint256 finalRefund, string decision, address decidedBy))",
+    "function getPayments(uint256 id) view returns (tuple(uint256 amount, uint256 paidAt)[])"
+  ];
+  const STATUS = Object.freeze({ Pending: 0, Confirmed: 1, Funded: 2, Inspected: 3, Disputed: 4, Settled: 5, Cancelled: 6 });
+  const statusNames = ["รอการยืนยัน", "ยืนยันแล้ว · รอฝากเงินประกัน", "ฝากเงินประกันแล้ว", "ตรวจห้องแล้ว · รอผู้เช่าอนุมัติ", "อยู่ระหว่างพิจารณาข้อพิพาท", "จัดสรรเงินประกันแล้ว", "ยกเลิกแล้ว"];
+  const $ = id => document.getElementById(id);
+  const value = id => $(id).value.trim();
+  let readProvider;
+  let readContract;
+  let walletProvider;
+  let writeContract;
+  let account;
+  let sending = false;
+  let lookupSequence = 0;
+
+  function getReadContract() {
+    if (!window.ethers) throw new Error("โหลด ethers.js ไม่สำเร็จ");
+    if (INFURA_URL.includes("YOUR_INFURA_API_KEY") || !ethers.isAddress(CONTRACT_ADDRESS)) {
+      throw new Error("กรุณาตั้งค่า INFURA_URL และ CONTRACT_ADDRESS ใน index.html");
+    }
+    if (!readContract) {
+      readProvider = new ethers.JsonRpcProvider(INFURA_URL, "sepolia");
+      readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, readProvider);
+    }
+    return readContract;
+  }
+
+  function message(target, text, className = "") {
+    target.className = className;
+    target.textContent = text;
+  }
+
+  function addText(parent, tag, text, className = "") {
+    const element = document.createElement(tag);
+    message(element, text, className);
+    parent.append(element);
+    return element;
+  }
+
+  const errorText = error => error.reason || error.shortMessage || error.message;
+  const eth = amount => ethers.formatEther(amount) + " ETH";
+  const dateTime = seconds => new Date(Number(seconds) * 1000).toLocaleString("th-TH", { timeZoneName: "short" });
+  const same = address => account?.toLowerCase() === address.toLowerCase();
+
+  function positiveId(text) {
+    if (!/^[0-9]{1,78}$/.test(text) || BigInt(text) < 1n || BigInt(text) > ethers.MaxUint256) {
+      throw new Error("กรุณาระบุ ID เป็นจำนวนเต็มบวก");
+    }
+    return BigInt(text);
+  }
+
+  function ethAmount(text, allowZero = false) {
+    if (!/^\d+(\.\d{1,18})?$/.test(text)) throw new Error("กรอกจำนวน ETH เช่น 0.02 (ทศนิยมได้สูงสุด 18 ตำแหน่ง)");
+    const amount = ethers.parseEther(text);
+    if ((!allowZero && amount === 0n) || amount > ethers.MaxUint256) throw new Error("จำนวน ETH อยู่นอกช่วงที่รองรับ");
+    return amount;
+  }
+
+  function dateValue(id) {
+    const timestamp = new Date(value(id)).getTime();
+    if (!Number.isFinite(timestamp) || timestamp < 0) throw new Error("วันและเวลาไม่ถูกต้อง");
+    return BigInt(Math.floor(timestamp / 1000));
+  }
+
+  async function loadBalance(blockTag = "latest") {
+    if (!account) return;
+    try {
+      const amount = await getReadContract().withdrawable(account, { blockTag });
+      $("balance").hidden = false;
+      $("balance").textContent = "ยอดที่ถอนได้: " + eth(amount);
+      $("withdraw").hidden = amount === 0n;
+    } catch (error) {
+      $("balance").hidden = false;
+      $("balance").textContent = "อ่านยอดถอนไม่สำเร็จ: " + errorText(error);
+      $("withdraw").hidden = true;
+    }
+  }
+
+  async function connectWallet() {
+    $("connect").disabled = true;
+    try {
+      const contract = getReadContract();
+      if (!window.ethereum) throw new Error("กรุณาติดตั้ง MetaMask");
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      if ((await provider.getNetwork()).chainId !== CHAIN_ID) throw new Error("เลือก Sepolia ใน MetaMask แล้วลองใหม่");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const signer = await provider.getSigner();
+      account = await signer.getAddress();
+      walletProvider = provider;
+      writeContract = contract.connect(signer);
+      message($("wallet"), "เชื่อมต่อแล้ว · " + account, "success");
+      message($("walletMessage"), "");
+      await Promise.all([loadBalance(), value("agreementId") ? loadAgreement() : Promise.resolve()]);
+    } catch (error) {
+      message($("walletMessage"), errorText(error), "error");
+    } finally {
+      $("connect").disabled = false;
+    }
+  }
+
+  async function transact(button, target, action) {
+    if (sending) {
+      message(target, "กำลังรอธุรกรรมก่อนหน้า");
+      return;
+    }
+    sending = true;
+    button.disabled = true;
+    try {
+      if (!writeContract) throw new Error("เชื่อม MetaMask ก่อนส่งธุรกรรม");
+      if ((await walletProvider.getNetwork()).chainId !== CHAIN_ID) throw new Error("เลือก Sepolia ใน MetaMask");
+      message(target, "ตรวจสอบและยืนยันธุรกรรมใน MetaMask");
+      const tx = await action();
+      message(target, "กำลังรอการยืนยัน " + tx.hash);
+      const receipt = await tx.wait();
+      message(target, "บันทึกสำเร็จ " + receipt.hash, "success");
+      return receipt;
+    } catch (error) {
+      message(target, errorText(error), "error");
+    } finally {
+      sending = false;
+      button.disabled = false;
+    }
+  }
+
+  async function loadAgreement(blockTag = "latest", clearMessage = true) {
+    const sequence = ++lookupSequence;
+    const root = $("agreementResult");
+    if (clearMessage) message($("agreementMessage"), "");
+    root.textContent = "กำลังอ่านสัญญาจาก Infura...";
+    try {
+      const id = positiveId(value("agreementId"));
+      const contract = getReadContract();
+      const block = await readProvider.getBlock(blockTag);
+      if (!block) throw new Error("ยังไม่พบบล็อก กดดูสัญญาอีกครั้งเพื่อรีเฟรช");
+      const atBlock = { blockTag: block.number };
+      const [agreement, settlement, payments] = await Promise.all([
+        contract.getAgreement(id, atBlock), contract.getSettlement(id, atBlock), contract.getPayments(id, atBlock)
+      ]);
+      const property = await contract.getProperty(agreement.propertyId, atBlock);
+      if (sequence !== lookupSequence) return;
+      root.replaceChildren();
+      renderAgreement(root, id, property, agreement, settlement, payments, BigInt(block.timestamp));
+    } catch (error) {
+      if (sequence === lookupSequence) {
+        root.replaceChildren();
+        addText(root, "p", errorText(error), "error");
+      }
+    }
+  }
+
+  function renderAgreement(root, id, property, agreement, settlement, payments, now) {
+    const status = Number(agreement.status);
+    const ended = now >= agreement.endsAt;
+    const card = addText(root, "article", "", "record");
+    addText(card, "h3", "สัญญา #" + id + " · " + property.name + " (ทรัพย์สิน #" + agreement.propertyId + ")");
+    addText(card, "p", "สถานะ: " + statusNames[status] + (ended ? " · ครบกำหนดแล้ว" : ""));
+    addText(card, "p", "เจ้าของห้อง: " + agreement.landlord + (agreement.landlordConfirmed ? " · ยืนยันแล้ว" : " · รอยืนยัน"));
+    addText(card, "p", "ผู้เช่า: " + agreement.tenant + (agreement.tenantConfirmed ? " · ยืนยันแล้ว" : " · รอยืนยัน"));
+    addText(card, "p", "ผู้ตัดสิน: " + agreement.arbitrator);
+    addText(card, "p", "เริ่ม " + dateTime(agreement.startsAt) + " · สิ้นสุด " + dateTime(agreement.endsAt));
+    addText(card, "p", "ค่าเช่า " + eth(agreement.rent) + " ต่องวด · ชำระแล้ว " + payments.length + "/" + agreement.installments);
+    addText(card, "p", "เงินประกัน " + eth(agreement.securityDeposit) + " · ค้างในสัญญา " + eth(agreement.depositHeld));
+    addText(card, "p", "เงื่อนไข: " + agreement.terms);
+    if (settlement.inspection) {
+      addText(card, "p", "ผลตรวจห้อง: " + settlement.inspection);
+      addText(card, "p", "เสนอคืน " + eth(settlement.proposedRefund) + " · เสนอหัก " + eth(agreement.securityDeposit - settlement.proposedRefund));
+    }
+    if (settlement.disputeReason) {
+      addText(card, "p", "ข้อพิพาท: " + settlement.disputeReason);
+      addText(card, "p", "เปิดโดย " + settlement.disputedBy, "muted");
+    }
+    if (status === STATUS.Settled) {
+      addText(card, "p", "ยอดคืน " + eth(settlement.finalRefund) + " · ยอดหัก " + eth(agreement.securityDeposit - settlement.finalRefund), "success");
+      addText(card, "p", "ผลอนุมัติ: " + settlement.decision);
+      addText(card, "p", "อนุมัติโดย " + settlement.decidedBy, "muted");
+    }
+    addText(card, "h3", "ประวัติชำระค่าเช่า");
+    if (payments.length) {
+      const list = addText(card, "ol", "");
+      payments.forEach(payment => addText(list, "li", eth(payment.amount) + " · " + dateTime(payment.paidAt)));
+    } else {
+      addText(card, "p", "ยังไม่มีการชำระค่าเช่า", "muted");
+    }
+    addAgreementActions(card, id, agreement, payments.length, status, ended);
+  }
+
+  function addAgreementActions(card, id, agreement, paymentCount, status, ended) {
+    const landlord = same(agreement.landlord);
+    const tenant = same(agreement.tenant);
+    function action(text, send, className = "") {
+      const button = addText(card, "button", text, className);
+      button.type = "button";
+      button.addEventListener("click", () => sendAgreementAction(button, id, send));
+    }
+    if (status === STATUS.Pending && !ended &&
+        ((landlord && !agreement.landlordConfirmed) || (tenant && !agreement.tenantConfirmed))) {
+      action("ยืนยันเงื่อนไขสัญญา", () => writeContract.confirmAgreement(id));
+    }
+    if ((landlord || tenant) && (status === STATUS.Pending || status === STATUS.Confirmed)) {
+      action("ยกเลิกสัญญาที่ยังไม่ฝากเงิน", () => writeContract.cancelUnfunded(id), "secondary");
+    }
+    if (tenant && !ended && status === STATUS.Confirmed) {
+      action("ฝากเงินประกัน " + eth(agreement.securityDeposit), () => writeContract.fundDeposit(id, { value: agreement.securityDeposit }));
+    }
+    if (tenant && !ended && status === STATUS.Funded && BigInt(paymentCount) < agreement.installments) {
+      action("ชำระค่าเช่างวด " + (paymentCount + 1), () => writeContract.payRent(id, { value: agreement.rent }));
+    }
+    if (landlord && ended && status === STATUS.Funded) {
+      settlementForm(card, id, "บันทึกผลตรวจห้อง", "ผลตรวจห้องและเหตุผลการหัก (ถ้ามี)", (refund, note) =>
+        writeContract.recordInspection(id, refund, note), agreement.depositHeld);
+    }
+    if (tenant && status === STATUS.Inspected) {
+      action("อนุมัติยอดคืนและยอดหัก", () => writeContract.approveRefund(id));
+    }
+    if ((tenant || landlord) && ended && (status === STATUS.Funded || status === STATUS.Inspected)) {
+      settlementForm(card, id, "เปิดข้อพิพาท", "เหตุผลที่โต้แย้ง", (_, reason) => writeContract.openDispute(id, reason));
+    }
+    if (same(agreement.arbitrator) && status === STATUS.Disputed) {
+      settlementForm(card, id, "บันทึกคำตัดสิน", "เหตุผลประกอบคำตัดสิน", (refund, decision) =>
+        writeContract.resolveDispute(id, refund, decision), agreement.depositHeld);
+    }
+  }
+
+  function settlementForm(parent, id, actionName, noteLabel, send, maxRefund) {
+    const form = addText(parent, "form", "", "action-form");
+    function field(tag, labelText) {
+      const label = addText(form, "label", labelText);
+      const input = document.createElement(tag);
+      input.required = true;
+      label.append(input);
+      return input;
+    }
+    let refundInput;
+    if (maxRefund !== undefined) {
+      refundInput = field("input", "ยอดคืนผู้เช่า (ETH) · สูงสุด " + eth(maxRefund));
+      refundInput.inputMode = "decimal";
+    }
+    const noteInput = field("textarea", noteLabel);
+    const button = addText(form, "button", actionName);
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      sendAgreementAction(button, id, () => {
+        const refund = refundInput ? ethAmount(refundInput.value.trim(), true) : 0n;
+        if (maxRefund !== undefined && refund > maxRefund) throw new Error("ยอดคืนสูงกว่าเงินประกันที่ค้างอยู่");
+        const note = noteInput.value.trim();
+        if (!note) throw new Error("กรุณาระบุรายละเอียด");
+        return send(refund, note);
+      });
+    });
+  }
+
+  async function sendAgreementAction(button, id, send) {
+    const receipt = await transact(button, $("agreementMessage"), send);
+    if (!receipt) return;
+    const refresh = value("agreementId") === String(id) ? loadAgreement(receipt.blockNumber, false) : Promise.resolve();
+    await Promise.all([refresh, loadBalance(receipt.blockNumber)]);
+  }
+
+
+  const tabTitles = { overview: "ภาพรวม", search: "ค้นหาสัญญา", properties: "ทรัพย์สิน", agreements: "สร้างสัญญา" };
+  function activateTab(name, updateHash = true) {
+    if (!tabTitles[name]) name = "overview";
+    document.querySelectorAll("[data-tab-panel]").forEach(panel => {
+      const active = panel.dataset.tabPanel === name;
+      panel.classList.toggle("active", active);
+      panel.setAttribute("aria-hidden", String(!active));
+    });
+    document.querySelectorAll(".nav-list a[data-tab]").forEach(link => {
+      const active = link.dataset.tab === name;
+      link.classList.toggle("active", active);
+      if (active) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+    const crumb = document.querySelector(".breadcrumb strong");
+    if (crumb) crumb.textContent = tabTitles[name];
+    if (updateHash) history.replaceState(null, "", "#" + name);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  document.querySelectorAll(".nav-list a[data-tab]").forEach(link => link.addEventListener("click", event => {
+    event.preventDefault(); activateTab(link.dataset.tab);
+  }));
+  document.querySelectorAll("[data-go-tab]").forEach(button => button.addEventListener("click", () => activateTab(button.dataset.goTab)));
+  const initialTab = location.hash.replace("#", "");
+  activateTab(Object.prototype.hasOwnProperty.call(tabTitles, initialTab) ? initialTab : "overview", false);
+  $("connect").addEventListener("click", connectWallet);
+  $("withdraw").addEventListener("click", async () => {
+    const receipt = await transact($("withdraw"), $("walletMessage"), () => writeContract.withdraw(account));
+    if (receipt) await loadBalance(receipt.blockNumber);
+  });
+  $("searchAgreement").addEventListener("submit", event => {
+    event.preventDefault();
+    loadAgreement();
+    loadBalance();
+  });
+  $("propertyForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const target = $("propertyMessage");
+    const receipt = await transact(event.currentTarget.querySelector("button"), target, () =>
+      writeContract.registerProperty(value("name"), ethAmount(value("rent")), ethAmount(value("deposit"))));
+    const registered = receipt?.logs.find(log => log.fragment?.name === "PropertyRegistered");
+    if (registered) {
+      const id = registered.args.propertyId.toString();
+      $("propertyId").value = id;
+      message(target, "ลงทะเบียนทรัพย์สินสำเร็จ · Property ID " + id, "success");
+    }
+  });
+  $("createForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const target = $("createMessage");
+    const receipt = await transact(event.currentTarget.querySelector("button"), target, () =>
+      writeContract.createAgreement({
+        propertyId: positiveId(value("propertyId")), tenant: ethers.getAddress(value("tenant")),
+        arbitrator: ethers.getAddress(value("arbitrator")), startsAt: dateValue("startsAt"),
+        endsAt: dateValue("endsAt"), installments: BigInt(value("installments")), terms: value("terms")
+      }));
+    const created = receipt?.logs.find(log => log.fragment?.name === "AgreementCreated");
+    if (created) {
+      const id = created.args.agreementId.toString();
+      $("agreementId").value = id;
+      message(target, "สร้างสัญญาสำเร็จ · Agreement ID " + id, "success");
+      await loadAgreement(receipt.blockNumber);
+    }
+  });
+  window.ethereum?.on?.("accountsChanged", () => location.reload());
+  window.ethereum?.on?.("chainChanged", () => location.reload());
+</script>
+</body>
+</html>
